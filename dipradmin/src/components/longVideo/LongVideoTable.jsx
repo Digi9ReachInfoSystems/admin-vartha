@@ -156,24 +156,38 @@ const fetchVideos = async () => {
       title: "Thumbnail",
       dataIndex: "thumbnail",
       key: "thumbnail",
-      render: (thumb) => <Image width={100} src={thumb} />,
+      width: 120,
+      render: (thumb) => (
+        <Image
+          width={88}
+          height={56}
+          src={thumb}
+          style={{ objectFit: "cover", borderRadius: 6 }}
+        />
+      ),
     },
     {
       title: "Title",
       dataIndex: "title",
       key: "title",
+      width: 200,
+      ellipsis: true,
       render: (text) => text || "No title",
     },
     {
       title: "Description",
       dataIndex: "description",
       key: "description",
+      width: 240,
+      ellipsis: true,
       render: (text) => text || "No description",
     },
     {
       title: "Magazine types",
       dataIndex: "magazineType",
       key: "magazineType",
+      width: 150,
+      ellipsis: true,
       render: (text) => {
         if (text === "magazine") {
           return "Vartha janapada";
@@ -187,6 +201,8 @@ const fetchVideos = async () => {
       title: "News type",
       dataIndex: "newsType",
       key: "newsType",
+      width: 130,
+      ellipsis: true,
       render: (text) => {
         if (text === "specialnews") {
           return "Special news";
@@ -198,28 +214,19 @@ const fetchVideos = async () => {
         return text || "N/A";
       },
     },
-    // {
-    //   title: "Total Likes",
-    //   dataIndex: "total_Likes",
-    //   key: "total_Likes",
-    //   render: (text) => text || 0,
-    // },
-    // {
-    //   title: "Total Views",
-    //   dataIndex: "Total_views",
-    //   key: "Total_views",
-    //   render: (text) => text || 0,
-    // },
     {
       title: "Created By",
       dataIndex: "createdBy",
       key: "createdBy",
+      width: 140,
+      ellipsis: true,
       render: (_, record) => record.createdBy?.displayName || "N/A",
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
+      width: 120,
       render: (status, record) => (
         <div
           onClick={() => handleStatusClick(record)}
@@ -241,8 +248,10 @@ const fetchVideos = async () => {
     {
       title: "Actions",
       key: "actions",
+      width: 140,
+      fixed: "right",
       render: (_, record) => (
-        <Space>
+        <Space size={4}>
           <IconActionBtn
             type="button"
             title="View"
@@ -279,7 +288,7 @@ const fetchVideos = async () => {
   ];
 
   return (
-    <div>
+    <div style={{ width: "100%", maxWidth: "100%", minWidth: 0 }}>
       <DataTableShell
         toolbar={
           <SearchBar
@@ -294,6 +303,7 @@ const fetchVideos = async () => {
         loading={loading}
         rowKey="_id"
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1200 }}
         emptyTitle="No long videos found"
       />
 

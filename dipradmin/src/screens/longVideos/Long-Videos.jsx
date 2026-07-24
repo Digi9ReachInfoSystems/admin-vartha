@@ -29,7 +29,7 @@ function LongVideos() {
         }
       />
 
-      <div className="block=table">
+      <div className="block-Table">
         <LongVideosTable />
       </div>
     </LongVideoWrapper>

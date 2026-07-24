@@ -58,7 +58,7 @@ const BaseLayout = () => {
             padding: "20px 20px 28px",
             background: "#F8FAFC",
             minHeight: "calc(100vh - 68px)",
-            overflowX: "auto",
+            overflowX: "hidden",
           }}
           className="page-fade"
         >

@@ -5,6 +5,7 @@ import EmptyState from "./EmptyState";
 
 /**
  * Visual shell around Ant Design Table — keeps existing columns/data/handlers.
+ * Defaults horizontal scroll so wide tables stay inside the card on small screens.
  */
 export default function DataTableShell({
   toolbar,
@@ -12,8 +13,14 @@ export default function DataTableShell({
   emptyDescription,
   locale,
   sticky = true,
+  scroll,
   ...tableProps
 }) {
+  const mergedScroll = {
+    x: "max-content",
+    ...(scroll || {}),
+  };
+
   return (
     <DataTableShellRoot>
       {toolbar ? <div className="dts-toolbar">{toolbar}</div> : null}
@@ -21,6 +28,7 @@ export default function DataTableShell({
         <Table
           sticky={sticky}
           size="middle"
+          scroll={mergedScroll}
           locale={{
             emptyText: (
               <EmptyState

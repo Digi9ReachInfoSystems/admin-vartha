@@ -212,6 +212,7 @@ function CategoryTable() {
         loading={loading}
         rowKey="_id"
         pagination={{ pageSize: 10 }}
+        scroll={{ x: "max-content" }}
       />
 
       {/* View Modal */}

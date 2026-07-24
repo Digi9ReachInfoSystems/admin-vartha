@@ -95,6 +95,9 @@ export const StatsCardRoot = styled.button`
 `;
 
 export const DataTableShellRoot = styled.div`
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   background: #fff;
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -111,7 +114,11 @@ export const DataTableShellRoot = styled.div`
   }
 
   .dts-body {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     padding: 0 8px 8px;
+    overflow-x: auto;
 
     .ant-table-sticky-holder {
       border-radius: 0;

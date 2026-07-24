@@ -13,10 +13,10 @@ import {
   deleteMagazine2,
   approveMagazine2,
   getMagazineHistoryById,
+  getMagazineByYearMarchofKarnataka,
 } from "../../service/Magazine/MagazineService2";
 import { Eye, Pencil, Trash2, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { getMagazineByYearMarchofKarnataka } from "../../service/Magazine/MagazineService2";
 import DataTableShell from "../ui/DataTableShell";
 import SearchBar from "../ui/SearchBar";
 import StatusBadge from "../ui/StatusBadge";
@@ -32,7 +32,7 @@ function MagazineTable() {
   const [isApprovalModalVisible, setIsApprovalModalVisible] = useState(false);
   const [selectedMagazine, setSelectedMagazine] = useState(null);
   const [searchText, setSearchText] = useState("");
-  const [selectedYear, setSelectedYear] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(undefined);
   const [approving, setApproving] = useState(false);
   const navigate = useNavigate();
   const userRole = localStorage.getItem("role");
@@ -44,7 +44,6 @@ function MagazineTable() {
   const fetchMagazines = async () => {
     try {
       const response = await getMagazines();
-      console.log("Magazine table response get all magazines", response);
       if (response.success) {
         setMagazines(response.data);
         setFilteredMagazines(response.data);
@@ -58,7 +57,6 @@ function MagazineTable() {
     }
   };
 
-  // ✅ Fetch magazines by year (new)
   const fetchMagazinesByYear = async (year) => {
     try {
       setLoading(true);
@@ -135,22 +133,21 @@ function MagazineTable() {
     setSearchText(value);
     const q = (value || "").toLowerCase();
     const filtered = magazines.filter((magazine) =>
-      magazine.title.toLowerCase().includes(q)
+      (magazine.title || "").toLowerCase().includes(q)
     );
     setFilteredMagazines(filtered);
   };
 
-  // ✅ Handle Year Change (new)
   const handleYearChange = (value) => {
-    setSelectedYear(value);
-    if (value) {
-      fetchMagazinesByYear(value);
+    const year = value === "all" || !value ? undefined : value;
+    setSelectedYear(year);
+    if (year) {
+      fetchMagazinesByYear(year);
     } else {
       setFilteredMagazines(magazines);
     }
   };
 
-  // ✅ Extract unique years from magazine data
   const uniqueYears = [
     ...new Set(magazines.map((mag) => mag.publishedYear).filter(Boolean)),
   ].sort((a, b) => b - a);
@@ -180,57 +177,72 @@ function MagazineTable() {
       title: "Thumbnail",
       dataIndex: "magazineThumbnail",
       key: "magazineThumbnail",
+      width: 100,
       render: (text) => (
-        <Image width={60} src={text} alt="Magazine Thumbnail" />
+        <Image
+          width={64}
+          height={80}
+          src={text}
+          alt="Magazine Thumbnail"
+          style={{ objectFit: "cover", borderRadius: 6 }}
+        />
       ),
     },
     {
       title: "Title",
       dataIndex: "title",
       key: "title",
+      width: 220,
       ellipsis: true,
+      render: (text) => text || "N/A",
     },
     {
       title: "Edition",
       dataIndex: "editionNumber",
       key: "editionNumber",
+      width: 90,
+      ellipsis: true,
+      render: (text) => text || "N/A",
     },
     {
-      title: "Published Date",
+      title: "Published",
+      key: "published",
+      width: 130,
+      ellipsis: true,
+      render: (_, record) => {
+        const month = record.publishedMonth;
+        const year = record.publishedYear;
+        if (month && year) return `${month} ${year}`;
+        return month || year || "N/A";
+      },
+    },
+    {
+      title: "Date",
       dataIndex: "createdTime",
       key: "createdTime",
-      render: (text) => new Date(text).toLocaleDateString(),
+      width: 110,
+      render: (text) =>
+        text ? new Date(text).toLocaleDateString() : "N/A",
     },
     {
-      title: "PDF URL",
+      title: "PDF",
       dataIndex: "magazinePdf",
       key: "magazinePdf",
-      render: (text) => (
-        <a href={text} target="_blank" rel="noopener noreferrer">
-          View PDF
-        </a>
-      ),
-    },
-    {
-      title: "Published month",
-      dataIndex: "publishedMonth",
-      key: "publishedMonth",
-    },
-    {
-      title: "Published year",
-      dataIndex: "publishedYear",
-      key: "publishedYear",
-    },
-    {
-      title: "Created By",
-      dataIndex: "createdBy",
-      key: "createdBy",
-      render: (_, record) => record.createdBy?.displayName,
+      width: 90,
+      render: (text) =>
+        text ? (
+          <a href={text} target="_blank" rel="noopener noreferrer">
+            View PDF
+          </a>
+        ) : (
+          "N/A"
+        ),
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
+      width: 110,
       render: (status, record) => (
         <div
           onClick={() => handleStatusClick(record)}
@@ -239,7 +251,7 @@ function MagazineTable() {
             alignItems: "center",
             gap: 4,
             cursor:
-              userRole === "admin" && status !== "approved"
+              userRole === "admin" && status === "pending"
                 ? "pointer"
                 : "default",
           }}
@@ -252,12 +264,22 @@ function MagazineTable() {
     {
       title: "Actions",
       key: "actions",
+      width: 140,
+      fixed: "right",
       render: (_, record) => (
-        <Space>
-          <IconActionBtn type="button" title="View" onClick={() => handleView(record)}>
+        <Space size={4}>
+          <IconActionBtn
+            type="button"
+            title="View"
+            onClick={() => handleView(record)}
+          >
             <Eye size={16} />
           </IconActionBtn>
-          <IconActionBtn type="button" title="Edit" onClick={() => handleEdit(record._id)}>
+          <IconActionBtn
+            type="button"
+            title="Edit"
+            onClick={() => handleEdit(record._id)}
+          >
             <Pencil size={16} />
           </IconActionBtn>
           {(userRole === "admin" ||
@@ -285,13 +307,13 @@ function MagazineTable() {
         toolbar={
           <Space wrap>
             <Select
-              placeholder="Select Year"
+              placeholder="All Years"
               style={{ width: 150 }}
-              value={selectedYear}
+              value={selectedYear ?? "all"}
               onChange={handleYearChange}
               allowClear
             >
-              <Option value={null}>All Years</Option>
+              <Option value="all">All Years</Option>
               {uniqueYears.map((year) => (
                 <Option key={year} value={year}>
                   {year}
@@ -310,27 +332,28 @@ function MagazineTable() {
         loading={loading}
         rowKey="_id"
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1100 }}
         emptyTitle="No magazines found"
       />
 
-      {/* View Modal */}
       <Modal
         title="Magazine Details"
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={800}
+        width={720}
+        centered
       >
         {selectedMagazine && (
           <>
             <Image
               width="100%"
-              height={300}
+              height={280}
               src={selectedMagazine.magazineThumbnail}
               alt="Magazine Thumbnail"
-              style={{ marginBottom: 20 }}
+              style={{ marginBottom: 20, objectFit: "contain" }}
             />
-            <Descriptions bordered column={1}>
+            <Descriptions bordered column={1} size="middle">
               <Descriptions.Item label="Title">
                 {selectedMagazine.title}
               </Descriptions.Item>
@@ -338,7 +361,9 @@ function MagazineTable() {
                 {selectedMagazine.editionNumber || "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Published Date">
-                {new Date(selectedMagazine.createdTime).toLocaleDateString()}
+                {selectedMagazine.createdTime
+                  ? new Date(selectedMagazine.createdTime).toLocaleDateString()
+                  : "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Status">
                 <StatusBadge status={selectedMagazine.status} />
@@ -353,30 +378,34 @@ function MagazineTable() {
                 {selectedMagazine.createdBy?.displayName || "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="PDF Link">
-                <a
-                  href={selectedMagazine.magazinePdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  View PDF
-                </a>
+                {selectedMagazine.magazinePdf ? (
+                  <a
+                    href={selectedMagazine.magazinePdf}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    View PDF
+                  </a>
+                ) : (
+                  "N/A"
+                )}
               </Descriptions.Item>
               <Descriptions.Item label="Description">
-                {selectedMagazine.description}
+                {selectedMagazine.description || "N/A"}
               </Descriptions.Item>
             </Descriptions>
           </>
         )}
       </Modal>
 
-      {/* Approval Modal */}
       <Modal
         title="Approve Magazine"
-        visible={isApprovalModalVisible}
+        open={isApprovalModalVisible}
         onOk={handleApprove}
         onCancel={() => setIsApprovalModalVisible(false)}
         confirmLoading={approving}
-        width={800}
+        width={720}
+        centered
         okText="Approve"
         cancelText="Cancel"
       >
@@ -384,12 +413,12 @@ function MagazineTable() {
           <>
             <Image
               width="100%"
-              height={300}
+              height={280}
               src={selectedMagazine.magazineThumbnail}
               alt="Magazine Thumbnail"
-              style={{ marginBottom: 20 }}
+              style={{ marginBottom: 20, objectFit: "contain" }}
             />
-            <Descriptions bordered column={1}>
+            <Descriptions bordered column={1} size="middle">
               <Descriptions.Item label="Title">
                 {selectedMagazine.title}
               </Descriptions.Item>
@@ -397,7 +426,9 @@ function MagazineTable() {
                 {selectedMagazine.editionNumber || "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Published Date">
-                {new Date(selectedMagazine.createdTime).toLocaleDateString()}
+                {selectedMagazine.createdTime
+                  ? new Date(selectedMagazine.createdTime).toLocaleDateString()
+                  : "N/A"}
               </Descriptions.Item>
               <Descriptions.Item label="Status">
                 <StatusBadge status={selectedMagazine.status} />

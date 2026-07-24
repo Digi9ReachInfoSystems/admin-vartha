@@ -163,24 +163,39 @@ function ShortVideosTable() {
       title: "Thumbnail",
       dataIndex: "thumbnail",
       key: "thumbnail",
-      render: (text) => <Image width={100} src={text} alt="Thumbnail" />,
+      width: 120,
+      render: (text) => (
+        <Image
+          width={88}
+          height={56}
+          src={text}
+          alt="Thumbnail"
+          style={{ objectFit: "cover", borderRadius: 6 }}
+        />
+      ),
     },
     {
       title: "Title",
       dataIndex: "title",
       key: "title",
+      width: 200,
+      ellipsis: true,
       render: (text) => text || "No title",
     },
     {
       title: "Description",
       dataIndex: "description",
       key: "description",
+      width: 240,
+      ellipsis: true,
       render: (text) => text || "No description",
     },
     {
       title: "Magazine types",
       dataIndex: "magazineType",
       key: "magazineType",
+      width: 150,
+      ellipsis: true,
       render: (text) => {
         if (text === "magazine") {
           return "Vartha janapada";
@@ -194,6 +209,8 @@ function ShortVideosTable() {
       title: "News type",
       dataIndex: "newsType",
       key: "newsType",
+      width: 130,
+      ellipsis: true,
       render: (text) => {
         if (text === "specialnews") {
           return "Special news";
@@ -205,28 +222,19 @@ function ShortVideosTable() {
         return text || "N/A";
       },
     },
-    // {
-    //   title: "Total Likes",
-    //   dataIndex: "total_Likes",
-    //   key: "total_Likes",
-    //   render: (text) => text || 0,
-    // },
-    // {
-    //   title: "Total Views",
-    //   dataIndex: "Total_views",
-    //   key: "Total_views",
-    //   render: (text) => text || 0,
-    // },
     {
       title: "Created By",
       dataIndex: "createdBy",
       key: "createdBy",
+      width: 140,
+      ellipsis: true,
       render: (_, record) => record.createdBy?.displayName || "N/A",
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
+      width: 120,
       render: (status, record) => (
         <div
           onClick={() => handleStatusClick(record)}
@@ -248,8 +256,10 @@ function ShortVideosTable() {
     {
       title: "Actions",
       key: "actions",
+      width: 140,
+      fixed: "right",
       render: (_, record) => (
-        <Space>
+        <Space size={4}>
           <IconActionBtn
             type="button"
             title="View"
@@ -284,7 +294,7 @@ function ShortVideosTable() {
   ];
 
   return (
-    <div>
+    <div style={{ width: "100%", maxWidth: "100%", minWidth: 0 }}>
       <DataTableShell
         toolbar={
           <SearchBar
@@ -299,6 +309,7 @@ function ShortVideosTable() {
         loading={loading}
         rowKey="_id"
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1200 }}
         emptyTitle="No short videos found"
       />
 

@@ -160,30 +160,30 @@ function ArticleTable() {
       title: "Image",
       dataIndex: "newsImage",
       key: "newsImage",
-      render: (text) => <Image width={60} src={text} alt="Article" />,
+      width: 90,
+      render: (text) => (
+        <Image
+          width={56}
+          height={40}
+          src={text}
+          alt="Article"
+          style={{ objectFit: "cover", borderRadius: 6 }}
+        />
+      ),
     },
     {
       title: "Title",
       dataIndex: "title",
       key: "title",
+      width: 220,
       ellipsis: true,
-    },
-    {
-      title: "Category",
-      dataIndex: "category",
-      key: "category",
-      render: (category) => {
-        if (!category) return "N/A";
-        if (typeof category === "object") {
-          return category.name || category.english || "N/A";
-        }
-        return "N/A";
-      },
     },
     {
       title: "Magazine types",
       dataIndex: "magazineType",
       key: "magazineType",
+      width: 150,
+      ellipsis: true,
       render: (text) => {
         if (text === "magazine") {
           return "Vartha janapada";
@@ -197,6 +197,8 @@ function ArticleTable() {
       title: "News type",
       dataIndex: "newsType",
       key: "newsType",
+      width: 120,
+      ellipsis: true,
       render: (text) => {
         if (text === "specialnews") {
           return "Special news";
@@ -208,21 +210,19 @@ function ArticleTable() {
         return text || "N/A";
       },
     },
-    // {
-    //   title: "Description",
-    //   dataIndex: "description",
-    //   key: "description",
-    //   ellipsis: true,
-    // },
     {
       title: "Author",
       dataIndex: "author",
       key: "author",
+      width: 120,
+      ellipsis: true,
     },
     {
       title: "District",
       dataIndex: "district",
       key: "district",
+      width: 120,
+      ellipsis: true,
       render: (district, record) => {
         // Try to find district by ID first
         if (district) {
@@ -253,28 +253,14 @@ function ArticleTable() {
       title: "Published Date",
       dataIndex: "publishedAt",
       key: "publishedAt",
+      width: 120,
       render: (text) => new Date(text).toLocaleDateString(),
-    },
-    // {
-    //   title: "Likes",
-    //   dataIndex: "total_Likes",
-    //   key: "total_Likes",
-    // },
-    // {
-    //   title: "Views",
-    //   dataIndex: "views",
-    //   key: "views",
-    // },
-    {
-      title: "Created By",
-      dataIndex: "createdBy",
-      key: "createdBy",
-      render: (_, record) => record.createdBy?.displayName,
     },
     {
       title: "Status",
       dataIndex: "status",
       key: "status",
+      width: 110,
       render: (status, record) => (
         <div
           onClick={(e) => {
@@ -299,8 +285,10 @@ function ArticleTable() {
     {
       title: "Actions",
       key: "actions",
+      width: 140,
+      fixed: "right",
       render: (_, record) => (
-        <Space>
+        <Space size={4}>
           <IconActionBtn type="button" title="View" onClick={() => handleView(record)}>
             <Eye size={16} />
           </IconActionBtn>
@@ -327,7 +315,7 @@ function ArticleTable() {
   ];
 
   return (
-    <>
+    <div style={{ width: "100%", maxWidth: "100%", minWidth: 0 }}>
       <DataTableShell
         toolbar={
           <SearchBar
@@ -342,6 +330,7 @@ function ArticleTable() {
         loading={loading}
         rowKey="_id"
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 1200 }}
         emptyTitle="No articles found"
       />
 
@@ -487,7 +476,7 @@ function ArticleTable() {
           </>
         )}
       </Modal>
-    </>
+    </div>
   );
 }
 
