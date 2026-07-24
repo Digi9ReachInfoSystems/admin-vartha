@@ -1,11 +1,12 @@
 import styled from "styled-components";
 export const ManageUsersWrapper = styled.div`
-  .block-title {
-    font-size: 20px;
-    font-weight: 700;
-  }
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 
   .users-table {
-    margin-top: 30px;
+    margin-top: 12px;
+    min-width: 0;
+    width: 100%;
   }
 `;

@@ -58,6 +58,23 @@ function LoginPage() {
           }
 
           localStorage.setItem("role", role);
+
+          const userId =
+            decoded.id ||
+            decoded.userId ||
+            loginApiResponse?.data?._id;
+          if (userId) {
+            localStorage.setItem("userId", String(userId));
+          }
+
+          const email =
+            decoded.email ||
+            loginApiResponse?.data?.email ||
+            values.email;
+          if (email) {
+            localStorage.setItem("userEmail", String(email).toLowerCase());
+          }
+
           message.success("Login successful!");
 
           if (role === "admin") navigate("/dashboard");

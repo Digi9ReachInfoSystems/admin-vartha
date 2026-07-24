@@ -9,24 +9,57 @@ import {
   Modal,
   Form,
   Input,
-  Select,
   message,
   Descriptions,
 } from "antd";
 import { Eye, Trash2, User, Plus } from "lucide-react";
+import { jwtDecode } from "jwt-decode";
 import {
   getUsers,
   createModerator,
   getUserById,
   deleteUser,
+  createAdmin,
 } from "../../service/User/UserApi";
-import { createAdmin } from "../../service/User/UserApi"; // Add this import
 import DataTableShell from "../ui/DataTableShell";
 import { IconActionBtn } from "../ui/ui.styles";
 
 const moment = window.moment;
 const { TabPane } = Tabs;
-const { Option } = Select;
+
+function getLoggedInIdentity() {
+  const token = localStorage.getItem("token");
+  let fromToken = {};
+  if (token) {
+    try {
+      fromToken = jwtDecode(token) || {};
+    } catch {
+      fromToken = {};
+    }
+  }
+
+  const userId =
+    localStorage.getItem("userId") ||
+    fromToken.id ||
+    fromToken.userId ||
+    null;
+  const email = (
+    localStorage.getItem("userEmail") ||
+    fromToken.email ||
+    ""
+  )
+    .toString()
+    .toLowerCase();
+
+  if (userId && !localStorage.getItem("userId")) {
+    localStorage.setItem("userId", String(userId));
+  }
+  if (email && !localStorage.getItem("userEmail")) {
+    localStorage.setItem("userEmail", email);
+  }
+
+  return { userId: userId ? String(userId) : null, email };
+}
 
 function UsersTable() {
   const [users, setUsers] = useState([]);
@@ -41,6 +74,8 @@ function UsersTable() {
   const [form] = Form.useForm();
   const [modalType, setModalType] = useState(""); // 'moderator' or 'admin'
   const currentUserRole = localStorage.getItem("role");
+  const { userId: currentUserId, email: currentUserEmail } =
+    getLoggedInIdentity();
 
   useEffect(() => {
     fetchUsers();
@@ -155,12 +190,18 @@ function UsersTable() {
   };
 
   // Action handlers
-  const handleEdit = (userId) => {
-    // console.log(`Edit user: ${userId}`);
-    // Add logic to navigate to edit page or open a modal
-  };
-
   const showDeleteConfirm = (userId) => {
+    const target = users.find((u) => String(u._id) === String(userId));
+    const isSelf =
+      (currentUserId && String(userId) === String(currentUserId)) ||
+      (currentUserEmail &&
+        target?.email &&
+        String(target.email).toLowerCase() === currentUserEmail);
+
+    if (isSelf) {
+      message.warning("You cannot delete your own account.");
+      return;
+    }
     setUserToDelete(userId);
     setDeleteConfirmVisible(true);
   };
@@ -196,39 +237,36 @@ function UsersTable() {
   // Define table columns
   const columns = [
     {
-      title: "Profile",
-      dataIndex: "profileImage",
-      key: "profileImage",
-      render: (profileImage) =>
-        profileImage ? (
-          <Avatar src={profileImage} />
-        ) : (
-          <Avatar style={{ backgroundColor: "#87d068" }}>U</Avatar>
-        ),
-    },
-    {
       title: "Name",
       dataIndex: "displayName",
       key: "displayName",
+      width: 180,
+      ellipsis: true,
+      render: (text) => text || "N/A",
     },
     {
       title: "Email",
       dataIndex: "email",
       key: "email",
+      width: 240,
+      ellipsis: true,
+      render: (text) => text || "N/A",
     },
     {
       title: "Phone Number",
       dataIndex: "phone_Number",
       key: "phone_Number",
+      width: 140,
+      ellipsis: true,
+      render: (text) => text || "—",
     },
     {
       title: "Role",
       dataIndex: "role",
       key: "role",
+      width: 120,
       render: (role) => {
-        // Normalize "content" role to "user"
-        const displayRole =
-          role === "content" ? "user" : role;
+        const displayRole = role === "content" ? "user" : role;
 
         return (
           <Tag
@@ -240,7 +278,7 @@ function UsersTable() {
                 : "green"
             }
           >
-            {displayRole.toUpperCase()}
+            {(displayRole || "user").toUpperCase()}
           </Tag>
         );
       },
@@ -248,19 +286,27 @@ function UsersTable() {
     {
       title: "Actions",
       key: "actions",
-      render: (_, record) => (
-        <Space size="middle">
-          <Tooltip title="View User">
-            <IconActionBtn
-              type="button"
-              title="View"
-              onClick={() => handleViewUser(record._id)}
-            >
-              <Eye size={16} />
-            </IconActionBtn>
-          </Tooltip>
-          {currentUserRole === "admin" && (
-            <Tooltip title="Delete User">
+      width: 110,
+      fixed: "right",
+      render: (_, record) => {
+        const isSelf =
+          (currentUserId && String(record._id) === String(currentUserId)) ||
+          (currentUserEmail &&
+            record.email &&
+            String(record.email).toLowerCase() === currentUserEmail);
+
+        return (
+          <Space size={4}>
+            <Tooltip title="View User">
+              <IconActionBtn
+                type="button"
+                title="View"
+                onClick={() => handleViewUser(record._id)}
+              >
+                <Eye size={16} />
+              </IconActionBtn>
+            </Tooltip>
+            {currentUserRole === "admin" && !isSelf && (
               <IconActionBtn
                 type="button"
                 title="Delete"
@@ -269,10 +315,10 @@ function UsersTable() {
               >
                 <Trash2 size={16} />
               </IconActionBtn>
-            </Tooltip>
-          )}
-        </Space>
-      ),
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -337,15 +383,17 @@ function UsersTable() {
         }))}
         loading={loading}
         pagination={{ pageSize: 10 }}
+        scroll={{ x: 900 }}
         emptyTitle="No users found"
       />
 
       {/* Create Moderator/Admin Modal */}
       <Modal
         title={getModalTitle()}
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={handleModalCancel}
         footer={null}
+        centered
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Form.Item
@@ -405,7 +453,7 @@ function UsersTable() {
       {/* View User Modal */}
       <Modal
         title="User Details"
-        visible={isViewModalVisible}
+        open={isViewModalVisible}
         onCancel={handleViewModalCancel}
         footer={[
           <Button key="back" onClick={handleViewModalCancel}>
@@ -413,6 +461,7 @@ function UsersTable() {
           </Button>,
         ]}
         width={700}
+        centered
       >
         {currentUser && (
           <Descriptions bordered column={2}>
@@ -460,18 +509,13 @@ function UsersTable() {
       {/* Delete Confirmation Modal */}
       <Modal
         title="Confirm Delete"
-        visible={deleteConfirmVisible}
+        open={deleteConfirmVisible}
         onOk={handleDelete}
         onCancel={handleDeleteCancel}
         okText="Delete"
         okButtonProps={{ danger: true }}
         cancelText="Cancel"
-        style={{
-          top: "50% ",
-          transform: "translateY(-50%)", // Optional: fine-tune vertical alignment
-          display: "flex",
-          justifyContent: "center",
-        }}
+        centered
       >
         <p>
           Are you sure you want to delete this user? This action cannot be
