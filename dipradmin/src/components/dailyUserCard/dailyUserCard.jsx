@@ -16,7 +16,7 @@ function DailyUserCard() {
       const month = selectedMonth.month() + 1;
 
       const response = await fetch(
-        `https://vartha-janapada.vercel.app/api/users/getMonthlyUser?year=${year}&month=${month}`
+        `${import.meta.env.VITE_BASE_URL}/api/users/getMonthlyUser?year=${year}&month=${month}`
       );
 
       if (!response.ok) throw new Error("Failed to fetch data.");

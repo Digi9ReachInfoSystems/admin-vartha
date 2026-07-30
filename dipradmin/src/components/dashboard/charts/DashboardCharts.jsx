@@ -164,7 +164,7 @@ function UserGrowthChart() {
         const year = month.year();
         const m = month.month() + 1;
         const response = await fetch(
-          `https://vartha-janapada.vercel.app/api/users/getMonthlyUser?year=${year}&month=${m}`
+          `${import.meta.env.VITE_BASE_URL}/api/users/getMonthlyUser?year=${year}&month=${m}`
         );
         const result = await response.json();
         if (result?.success && Array.isArray(result.data)) {
