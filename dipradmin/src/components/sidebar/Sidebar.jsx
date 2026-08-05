@@ -16,6 +16,7 @@ import {
   FolderOpen,
   MapPin,
   MessagesSquare,
+  Settings,
   LogOut,
 } from "lucide-react";
 import {
@@ -77,6 +78,11 @@ const Sidebar = ({ onNavigate }) => {
       items.push(
         { key: "/manage-articles", icon: icon(Newspaper), label: "Articles" },
         {
+          key: "/karnataka-public-news",
+          icon: icon(Newspaper),
+          label: "Inshorts-News",
+        },
+        {
           key: "/manage-varthajanapada",
           icon: icon(BookOpen),
           label: "Vartha Janapada",
@@ -129,6 +135,17 @@ const Sidebar = ({ onNavigate }) => {
           key: "/manage-moderation",
           icon: icon(MessagesSquare),
           label: "Comments",
+        },
+        {
+          key: "settings",
+          icon: icon(Settings),
+          label: "Settings",
+          children: [
+            {
+              key: "/settings/karnataka-dipr-integration",
+              label: "Inshorts Integration",
+            },
+          ],
         }
       );
     }
@@ -136,9 +153,15 @@ const Sidebar = ({ onNavigate }) => {
     return items;
   }, [canViewContent, isAdminOrModerator]);
 
+  const flatKeys = (items) =>
+    items.flatMap((item) =>
+      item.children?.length ? flatKeys(item.children) : [item.key]
+    );
+
+  const allKeys = flatKeys(menuItems);
   const selectedKey =
-    menuItems.find((item) => currentPath === item.key)?.key ||
-    menuItems.find((item) => currentPath.startsWith(`${item.key}/`))?.key ||
+    allKeys.find((key) => currentPath === key) ||
+    allKeys.find((key) => currentPath.startsWith(`${key}/`)) ||
     currentPath;
 
   return (

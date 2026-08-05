@@ -14,6 +14,7 @@ export default function DataTableShell({
   locale,
   sticky = true,
   scroll,
+  className,
   ...tableProps
 }) {
   const mergedScroll = {
@@ -22,7 +23,7 @@ export default function DataTableShell({
   };
 
   return (
-    <DataTableShellRoot>
+    <DataTableShellRoot className={className}>
       {toolbar ? <div className="dts-toolbar">{toolbar}</div> : null}
       <div className="dts-body">
         <Table

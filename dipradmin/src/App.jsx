@@ -60,6 +60,9 @@ import AddDistrict from "./screens/districts/AddDistrict.jsx";
 import EditDistrict from "./screens/districts/EditDistrict.jsx";
 import DistrictsPage from "./screens/districts/DistrictsPage.jsx";
 import LiveTvPage from "./screens/liveTv/LiveTvPage.jsx";
+import KarnatakaDiprIntegrationPage from "./screens/settings/KarnatakaDiprIntegrationPage.jsx";
+import KarnatakaNewsPage from "./screens/karnatakaNews/KarnatakaNewsPage.jsx";
+import AddKarnatakaNewsPage from "./screens/karnatakaNews/AddKarnatakaNewsPage.jsx";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -131,6 +134,22 @@ function App() {
               element={
                 <PrivateRoute>
                   <AddArticlePage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/karnataka-public-news"
+              element={
+                <PrivateRoute>
+                  <KarnatakaNewsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/karnataka-public-news/create"
+              element={
+                <PrivateRoute>
+                  <AddKarnatakaNewsPage />
                 </PrivateRoute>
               }
             />
@@ -531,6 +550,15 @@ function App() {
               element={
                 <PrivateRoute>
                   <LiveTvPage />
+                </PrivateRoute>
+              }
+            />
+
+            <Route
+              path="/settings/karnataka-dipr-integration"
+              element={
+                <PrivateRoute>
+                  <KarnatakaDiprIntegrationPage />
                 </PrivateRoute>
               }
             />
