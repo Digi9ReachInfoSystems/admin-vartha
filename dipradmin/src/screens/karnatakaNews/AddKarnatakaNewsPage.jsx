@@ -34,7 +34,9 @@ function matchDistrictOption(districtValue, districtOptions) {
   return byLabel?.value || raw;
 }
 
-export default function AddKarnatakaNewsPage() {
+export default function AddKarnatakaNewsPage({ level = "district" }) {
+  const isState = level === "state";
+  const listPath = isState ? "/karnataka-state-news" : "/karnataka-public-news";
   const navigate = useNavigate();
   const location = useLocation();
   const [form] = Form.useForm();
@@ -57,6 +59,10 @@ export default function AddKarnatakaNewsPage() {
 
   useEffect(() => {
     let mounted = true;
+    if (isState) {
+      setLoadingDistricts(false);
+      return undefined;
+    }
     (async () => {
       setLoadingDistricts(true);
       try {
@@ -72,7 +78,7 @@ export default function AddKarnatakaNewsPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [isState]);
 
   useEffect(() => {
     if (!prefillPayload) return;
@@ -106,11 +112,20 @@ export default function AddKarnatakaNewsPage() {
 
       const payload = {
         title: String(values.title || "").trim(),
-        district: values.district,
+        content_type: isState ? "STATE_LEVEL" : "DISTRICT_LEVEL",
         images: [image],
         videos: [],
-        voiceover: String(values.voiceover || "").trim(),
       };
+      const voiceover = String(values.voiceover || "").trim();
+      if (voiceover) {
+        payload.voiceover = voiceover;
+      }
+      const district = isState
+        ? prefillPayload?.district
+        : values.district;
+      if (district) {
+        payload.district = district;
+      }
       if (values.script && String(values.script).trim()) {
         payload.script = String(values.script).trim();
       }
@@ -138,7 +153,7 @@ export default function AddKarnatakaNewsPage() {
           markArticleCreatedLocally(articleId);
         }
         message.success("News created successfully");
-        navigate("/karnataka-public-news", {
+        navigate(listPath, {
           state: {
             createdArticleId: articleId || null,
             refreshMarks: true,
@@ -166,12 +181,18 @@ export default function AddKarnatakaNewsPage() {
   return (
     <div style={{ maxWidth: 820 }}>
       <PageHeader
-        title={fromArticle ? "Confirm Create" : "Create Inshorts-News"}
+        title={
+          fromArticle
+            ? "Confirm Create"
+            : isState
+              ? "Create Inshorts State"
+              : "Create Inshorts District"
+        }
         extra={
           <Space>
             <Button
               icon={<ArrowLeftOutlined />}
-              onClick={() => navigate("/karnataka-public-news")}
+              onClick={() => navigate(listPath)}
             >
               Back
             </Button>
@@ -208,19 +229,21 @@ export default function AddKarnatakaNewsPage() {
             <Input placeholder="Enter Kannada news title" />
           </Form.Item>
 
-          <Form.Item
-            label="District"
-            name="district"
-            rules={[{ required: true, message: "Please select a district" }]}
-          >
-            <Select
-              showSearch
-              loading={loadingDistricts}
-              placeholder="Select district"
-              options={districtOptions}
-              optionFilterProp="label"
-            />
-          </Form.Item>
+          {!isState ? (
+            <Form.Item
+              label="District"
+              name="district"
+              rules={[{ required: true, message: "Please select a district" }]}
+            >
+              <Select
+                showSearch
+                loading={loadingDistricts}
+                placeholder="Select district"
+                options={districtOptions}
+                optionFilterProp="label"
+              />
+            </Form.Item>
+          ) : null}
 
           <Form.Item
             label="News Image"
@@ -234,17 +257,25 @@ export default function AddKarnatakaNewsPage() {
           </Form.Item>
 
           <Form.Item
-            label="Audio / Voiceover"
+            label="Audio / Voiceover (optional)"
             name="voiceover"
             rules={[
-              { required: true, message: "Please add the audio link" },
-              { type: "url", message: "Enter a valid link" },
+              {
+                validator: (_, value) => {
+                  const text = String(value || "").trim();
+                  if (!text) return Promise.resolve();
+                  try {
+                    const parsed = new URL(text);
+                    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+                      return Promise.resolve();
+                    }
+                  } catch (_) {
+                    // fall through
+                  }
+                  return Promise.reject(new Error("Enter a valid link"));
+                },
+              },
             ]}
-            extra={
-              fromArticle && !prefillPayload?.voiceover
-                ? "No audio found for this news — please add an audio link."
-                : undefined
-            }
           >
             <Input placeholder="Paste audio link" />
           </Form.Item>

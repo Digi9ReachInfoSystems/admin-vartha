@@ -80,7 +80,12 @@ const Sidebar = ({ onNavigate }) => {
         {
           key: "/karnataka-public-news",
           icon: icon(Newspaper),
-          label: "Inshorts-News",
+          label: "Inshorts District",
+        },
+        {
+          key: "/karnataka-state-news",
+          icon: icon(Newspaper),
+          label: "Inshorts State",
         },
         {
           key: "/manage-varthajanapada",

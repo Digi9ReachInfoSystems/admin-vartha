@@ -9,7 +9,7 @@ import SearchBar from "../../components/ui/SearchBar";
 import StatusBadge from "../../components/ui/StatusBadge";
 import {
   getCreatedMarks,
-  getDistrictNews,
+  getNewsByType,
   getLocalCreatedArticleIds,
   mapArticleToPublishPayload,
 } from "../../service/karnatakaNews/KarnatakaNewsService";
@@ -128,7 +128,11 @@ function formatPublished(value, row) {
   }
 }
 
-export default function KarnatakaNewsPage() {
+export default function KarnatakaNewsPage({ level = "district" }) {
+  const isState = level === "state";
+  const listPath = isState ? "/karnataka-state-news" : "/karnataka-public-news";
+  const newsType = isState ? "statenews" : "districtnews";
+  const pageTitle = isState ? "Inshorts State" : "Inshorts District";
   const navigate = useNavigate();
   const location = useLocation();
   const [loading, setLoading] = useState(true);
@@ -140,7 +144,7 @@ export default function KarnatakaNewsPage() {
     setLoading(true);
     try {
       const [newsRes, marksRes] = await Promise.all([
-        getDistrictNews(1, 50),
+        getNewsByType(newsType, 1, 50),
         getCreatedMarks().catch((err) => {
           console.error(err);
           return { data: [] };
@@ -159,12 +163,12 @@ export default function KarnatakaNewsPage() {
       setCreatedIds(fromDb);
     } catch (error) {
       console.error(error);
-      message.error(error.message || "Failed to load district news");
+      message.error(error.message || "Failed to load news");
       setItems([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [newsType]);
 
   useEffect(() => {
     loadList();
@@ -191,11 +195,12 @@ export default function KarnatakaNewsPage() {
 
   const openCreateFromRow = (article) => {
     const payload = mapArticleToPublishPayload(article);
-    navigate("/karnataka-public-news/create", {
+    navigate(`${listPath}/create`, {
       state: {
         article,
         payload,
         fromArticle: true,
+        level,
       },
     });
   };
@@ -238,17 +243,19 @@ export default function KarnatakaNewsPage() {
         );
       },
     },
-    {
-      title: "District",
-      key: "district",
-      width: 140,
-      ellipsis: true,
-      render: (_, row) => (
-        <Tag style={{ marginInlineEnd: 0 }}>
-          {formatDistrict(row?.district || row?.district_slug)}
-        </Tag>
-      ),
-    },
+    !isState
+      ? {
+          title: "District",
+          key: "district",
+          width: 140,
+          ellipsis: true,
+          render: (_, row) => (
+            <Tag style={{ marginInlineEnd: 0 }}>
+              {formatDistrict(row?.district || row?.district_slug)}
+            </Tag>
+          ),
+        }
+      : null,
     {
       title: "Type",
       dataIndex: "newsType",
@@ -256,7 +263,7 @@ export default function KarnatakaNewsPage() {
       width: 120,
       render: (text) => (
         <Tag color="blue" style={{ marginInlineEnd: 0 }}>
-          {text || "districtnews"}
+          {text || newsType}
         </Tag>
       ),
     },
@@ -298,17 +305,19 @@ export default function KarnatakaNewsPage() {
           </Button>
         ),
     },
-  ];
+  ].filter(Boolean);
 
   return (
     <PageWrap>
       <PageHeader
-        title="Inshorts-News"
+        title={pageTitle}
         extra={
           <Button
             type="primary"
             icon={<Plus size={16} />}
-            onClick={() => navigate("/karnataka-public-news/create")}
+            onClick={() =>
+              navigate(`${listPath}/create`, { state: { level } })
+            }
             style={{ background: "#005BAC" }}
           >
             Create
@@ -322,15 +331,19 @@ export default function KarnatakaNewsPage() {
         rowKey={(row) => row._id || row.id}
         columns={columns}
         dataSource={filtered}
-        emptyTitle="No district news found"
-        emptyDescription="Existing districtnews will appear here."
+        emptyTitle={isState ? "No state news found" : "No district news found"}
+        emptyDescription={
+          isState
+            ? "Existing state news will appear here."
+            : "Existing district news will appear here."
+        }
         scroll={{ x: 980 }}
         sticky
         toolbar={
           <SearchBar
             value={searchText}
             onChange={setSearchText}
-            placeholder="Search title or district"
+            placeholder={isState ? "Search title" : "Search title or district"}
           />
         }
         pagination={{

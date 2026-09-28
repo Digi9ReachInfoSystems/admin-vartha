@@ -141,7 +141,7 @@ function App() {
               path="/karnataka-public-news"
               element={
                 <PrivateRoute>
-                  <KarnatakaNewsPage />
+                  <KarnatakaNewsPage level="district" />
                 </PrivateRoute>
               }
             />
@@ -149,7 +149,23 @@ function App() {
               path="/karnataka-public-news/create"
               element={
                 <PrivateRoute>
-                  <AddKarnatakaNewsPage />
+                  <AddKarnatakaNewsPage level="district" />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/karnataka-state-news"
+              element={
+                <PrivateRoute>
+                  <KarnatakaNewsPage level="state" />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/karnataka-state-news/create"
+              element={
+                <PrivateRoute>
+                  <AddKarnatakaNewsPage level="state" />
                 </PrivateRoute>
               }
             />

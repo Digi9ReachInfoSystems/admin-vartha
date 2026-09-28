@@ -60,6 +60,8 @@ export default function KarnatakaDiprIntegrationPage() {
   const [config, setConfig] = useState(null);
   const [districts, setDistricts] = useState([]);
   const enabledWatch = Form.useWatch("enabled", form);
+  const publishLevel = Form.useWatch("content_type", publishForm);
+  const isStatePublish = publishLevel === "STATE_LEVEL";
   const showPublish = Boolean(enabledWatch || config?.enabled);
 
   const applyConfig = useCallback(
@@ -149,11 +151,17 @@ export default function KarnatakaDiprIntegrationPage() {
       setPublishing(true);
       const payload = {
         title: String(values.title || "").trim(),
-        district: values.district,
+        content_type: values.content_type || "DISTRICT_LEVEL",
         images,
         videos,
-        voiceover: String(values.voiceover || "").trim(),
       };
+      const voiceover = String(values.voiceover || "").trim();
+      if (voiceover) {
+        payload.voiceover = voiceover;
+      }
+      if (values.content_type !== "STATE_LEVEL" && values.district) {
+        payload.district = values.district;
+      }
       if (values.script && String(values.script).trim()) {
         payload.script = String(values.script).trim();
       }
@@ -284,8 +292,25 @@ export default function KarnatakaDiprIntegrationPage() {
             form={publishForm}
             layout="vertical"
             disabled={loading || publishing}
-            initialValues={{ images: [""], videos: [] }}
+            initialValues={{
+              images: [""],
+              videos: [],
+              content_type: "DISTRICT_LEVEL",
+            }}
           >
+            <Form.Item
+              label="Post as"
+              name="content_type"
+              rules={[{ required: true, message: "Please choose state or district" }]}
+            >
+              <Select
+                options={[
+                  { value: "DISTRICT_LEVEL", label: "District" },
+                  { value: "STATE_LEVEL", label: "State" },
+                ]}
+              />
+            </Form.Item>
+
             <Form.Item
               label="News Title (Kannada)"
               name="title"
@@ -294,18 +319,20 @@ export default function KarnatakaDiprIntegrationPage() {
               <Input placeholder="Enter Kannada news title" />
             </Form.Item>
 
-            <Form.Item
-              label="District"
-              name="district"
-              rules={[{ required: true, message: "Please select a district" }]}
-            >
-              <Select
-                showSearch
-                placeholder="Select district"
-                options={districtOptions}
-                optionFilterProp="label"
-              />
-            </Form.Item>
+            {!isStatePublish ? (
+              <Form.Item
+                label="District"
+                name="district"
+                rules={[{ required: true, message: "Please select a district" }]}
+              >
+                <Select
+                  showSearch
+                  placeholder="Select district"
+                  options={districtOptions}
+                  optionFilterProp="label"
+                />
+              </Form.Item>
+            ) : null}
 
             <Form.List name="images">
               {(fields, { add, remove }) => (
@@ -418,11 +445,24 @@ export default function KarnatakaDiprIntegrationPage() {
             </Form.List>
 
             <Form.Item
-              label="Audio / Voiceover"
+              label="Audio / Voiceover (optional)"
               name="voiceover"
               rules={[
-                { required: true, message: "Please add the audio link" },
-                { type: "url", message: "Enter a valid link" },
+                {
+                  validator: (_, value) => {
+                    const text = String(value || "").trim();
+                    if (!text) return Promise.resolve();
+                    try {
+                      const parsed = new URL(text);
+                      if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+                        return Promise.resolve();
+                      }
+                    } catch (_) {
+                      // fall through
+                    }
+                    return Promise.reject(new Error("Enter a valid link"));
+                  },
+                },
               ]}
             >
               <Input placeholder="Paste audio link" />

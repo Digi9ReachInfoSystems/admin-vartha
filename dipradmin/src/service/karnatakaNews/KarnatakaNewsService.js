@@ -22,20 +22,27 @@ async function parseJsonResponse(response, fallbackMessage) {
   return result;
 }
 
-/** GET existing district news only */
-export const getDistrictNews = async (page = 1, limit = 50) => {
+/** GET existing news by type: districtnews or statenews */
+export const getNewsByType = async (newsType = "districtnews", page = 1, limit = 50) => {
   if (!BASE_URL) throw new Error("VITE_BASE_URL is not set");
+  const safeType = newsType === "statenews" ? "statenews" : "districtnews";
   const safePage = Math.max(1, Number(page) || 1);
   const safeLimit = Math.min(Math.max(Number(limit) || 50, 1), 50);
   const response = await fetch(
-    `${BASE_URL}/api/news-new/getNewsByNewsType/districtnews?page=${safePage}&limit=${safeLimit}`,
+    `${BASE_URL}/api/news-new/getNewsByNewsType/${safeType}?page=${safePage}&limit=${safeLimit}`,
     {
       method: "GET",
       headers: { "Content-Type": "application/json" },
     }
   );
-  return parseJsonResponse(response, "Failed to load district news");
+  return parseJsonResponse(response, "Failed to load news");
 };
+
+export const getDistrictNews = (page = 1, limit = 50) =>
+  getNewsByType("districtnews", page, limit);
+
+export const getStateNews = (page = 1, limit = 50) =>
+  getNewsByType("statenews", page, limit);
 
 export const getKarnatakaDistricts = async () => {
   if (!BASE_URL) throw new Error("VITE_BASE_URL is not set");
@@ -98,6 +105,8 @@ export function mapArticleToPublishPayload(article = {}) {
     videos: [],
     voiceover,
     script,
+    content_type:
+      article.newsType === "statenews" ? "STATE_LEVEL" : "DISTRICT_LEVEL",
   };
 }
 
